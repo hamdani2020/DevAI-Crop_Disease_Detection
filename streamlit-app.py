@@ -1,6 +1,11 @@
 import requests
 import streamlit as st
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
+
+x_api_key = os.getenv("X-API-KEY")
 
 # MongoDB connection setup
 MONGO_URI = "mongodb+srv://node-usr:Grook1_1.@node-tuts.2kjewxh.mongodb.net/"  # Replace with your MongoDB URI
@@ -65,7 +70,7 @@ if prompt := st.chat_input():
     # Send prompt to the public API
     url = "https://ai-api.amalitech.org/api/v1/public/chat"  # Replace with your API endpoint
     headers = {
-               "X-Api-Key": "h1EPkA3dpPRFcXHQ5Eg9rXMthPaAh-hw"
+               "X-Api-Key": x_api_key
                }
     payload = {
         # "conversationId": st.session_state["conversation_id"],
