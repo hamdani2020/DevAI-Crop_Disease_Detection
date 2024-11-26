@@ -8,9 +8,9 @@ load_dotenv()
 x_api_key = os.getenv("X-API-KEY")
 
 # MongoDB connection setup
-MONGO_URI = "mongodb+srv://node-usr:Grook1_1.@node-tuts.2kjewxh.mongodb.net/"  # Replace with your MongoDB URI
-DATABASE_NAME = "DevAi"
-COLLECTION_NAME = "conversation"
+MONGO_URI = os.getenv("MONGO_URI")  # Replace with your MongoDB URI
+DATABASE_NAME = os.getenv("DATABASE_NAME")
+COLLECTION_NAME = os.getenv("COLLECTION_NAME")
 
 client = MongoClient(MONGO_URI)
 db = client[DATABASE_NAME]
@@ -68,7 +68,7 @@ if prompt := st.chat_input():
 
     print("Convo_Id",st.session_state["conversation_id"]) #hereeeeeeeeeeeeeeeeee
     # Send prompt to the public API
-    url = "https://ai-api.amalitech.org/api/v1/public/chat"  # Replace with your API endpoint
+    url =  os.getenv("AI_URI") # Replace with your API endpoint
     headers = {
                "X-Api-Key": x_api_key
                }
