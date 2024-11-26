@@ -1,1 +1,1 @@
-DevAI Crop Disease Detection
+Editted readme file
