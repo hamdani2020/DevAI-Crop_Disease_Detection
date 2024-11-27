@@ -73,15 +73,15 @@ if prompt := st.chat_input():
 
     print("Convo_Id",st.session_state["conversation_id"]) #hereeeeeeeeeeeeeeeeee
     # Send prompt to the public API
-<<<<<<< HEAD
+
     url =  os.getenv("AI_URI") # Replace with your API endpoint
     headers = {
                "X-Api-Key": x_api_key
-=======
+
     url = os.getenv("AI_URI")  # Replace with your API endpoint
     headers = {
                "X-Api-Key": X_API_KEY
->>>>>>> 67d51796cd285645910b02cd701bfd6af6b0b0f8
+
                }
     payload = {
         # "conversationId": st.session_state["conversation_id"],
