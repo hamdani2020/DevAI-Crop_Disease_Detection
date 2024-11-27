@@ -49,7 +49,7 @@ def detect_objects(image):
             # Get confidence and bounding box
             conf = float(box.conf[0])
             x1, y1, x2, y2 = map(int, box.xyxy[0])
-
+ 
             detected_objects.append(
                 {"class": class_name, "confidence": conf, "bbox": (x1, y1, x2, y2)}
             )
