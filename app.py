@@ -215,10 +215,10 @@ def main():
     # Optional sidebar for advanced settings (collapsed by default)
     with st.sidebar:
         st.header("⚙️ Advanced Settings")
-        # model_id = st.text_input(
-        #     "Model ID", value=DEFAULT_MODEL_ID, help="Leave blank to use default model"
-        # )
-        # stream_response = st.checkbox("Stream Response", value=False)
+        model_id = st.text_input(
+            "Model ID", value=DEFAULT_MODEL_ID, help="Leave blank to use default model"
+        )
+        stream_response = st.checkbox("Stream Response", value=False)
 
     # File uploader for images
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
