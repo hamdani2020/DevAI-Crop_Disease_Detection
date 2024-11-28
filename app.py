@@ -159,7 +159,7 @@ def send_amaliai_request(
 
 def display_conversation_history():
     """
-    This Function displays the conversation history in the sidebar
+    Display conversation history in the sidebar with improved tracking
     """
     st.sidebar.header("💬 Conversation History")
 
@@ -191,6 +191,17 @@ def display_conversation_history():
             )
 
 
+# def add_to_conversation_history(role, content):
+#     """
+#     Add a message to the conversation history
+#
+#     Parameters:
+#         role (str): Role of the message sender ('user', or 'assistant')
+#         content (str): Content of the message
+#     """
+#     st.session_state.conversation_history.append({"role": role, "content": content})
+
+
 # Streamlit App
 def main():
     # Page configuration
@@ -220,6 +231,17 @@ def main():
         )
         stream_response = st.checkbox("Stream Response", value=False)
 
+        # Display chat conversation on the main page
+        # st.header(" Chat with AmaliAI")
+        #
+        # chat_container = st.container()
+        # with chat_container:
+        #     for message in st.session_state.conversation_history:
+        #         if message["role"] == "user":
+        #             st.chat_message("user").markdown(message["content"])
+        #         else:
+        #             st.chat_message("assistant").markdown(message["content"])
+
     # File uploader for images
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
@@ -241,22 +263,26 @@ def main():
         st.dataframe(objects_df)
 
         # Question input for the image
+        st.markdown("### Chat with AMALIAI")
         question = st.text_input(
-            "Ask something about the image",
+            "### Chat with AmaliAI",
             placeholder="What objects are in this image?",
         )
 
+        if question or st.session_state.conversation_history:
+            st.write("---")
+
         # Prepare context about detected objects
-        objects_context = (
-            "\n".join(
-                [
-                    f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
-                    for obj in detected_objects
-                ]
-            )
-            if detected_objects
-            else "No Objects detected"
-        )
+        # objects_context = (
+        #     "\n".join(
+        #         [
+        #             f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
+        #             for obj in detected_objects
+        #         ]
+        #     )
+        #     if detected_objects
+        #     else "No Objects detected"
+        # )
 
         # Process question if provided
         if uploaded_file and question:
@@ -267,35 +293,45 @@ def main():
             img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
             # Construct full prompt
-            full_prompt = f"""Detected objects in the image: {objects_context} Question: {question}"""
+            full_prompt = f"""Question: {question}"""
 
             # Send request to AmaliAI
-        try:
-            # Add user message to conversation history
-            st.session_state.conversation_history.append(
-                {"role": "user", "content": full_prompt}
-            )
+            try:
+                st.session_state.conversation_history.append(
+                    {"role": "user", "content": question}
+                )
 
-            # Send request
-            response = send_amaliai_request(
-                base_url=AMALIAI_BASE_URL,
-                api_key=AMALIAI_API_KEY,
-                prompt=full_prompt,
-                conversation_id=st.session_state.conversation_id,
-                parent_message_id=st.session_state.parent_message_id,
-                model_id=model_id or None,
-                stream=stream_response,
-            )
+                response = send_amaliai_request(
+                    base_url=AMALIAI_BASE_URL,
+                    api_key=AMALIAI_API_KEY,
+                    prompt=full_prompt,
+                    conversation_id=st.session_state.conversation_id,
+                    parent_message_id=st.session_state.parent_message_id,
+                    model_id=model_id or None,
+                    stream=stream_response,
+                )
 
-            st.session_state.conversation_history.append(
-                {"role": "Assistant", "content": response}
-            )
+                # Addd assistant response to conversation History
+                st.session_state.conversation_history.append(
+                    {"role": "assistant", "content": response}
+                )
 
-            st.subheader("AmaliAI's Response")
-            st.write(response)
+                # Update parent message ID for context tracking
+                st.session_state.parent_message_id = str(uuid.uuid4())
 
-        except Exception as e:
-            st.error(f"An error occured: {str(e)}")
+                # add_to_conversation_history("assistant", response)
+                #
+                # st.subheader("AmaliAI's Response")
+                st.write(response)
+
+            except Exception as e:
+                st.error(f"An error occured: {str(e)}")
+
+        for message in st.session_state.conversation_history:
+            if message["role"] == "user":
+                st.chat_message("user").markdown(message["content"])
+            else:
+                st.chat_message("assistant").markdown(message["content"])
 
 
 if __name__ == "__main__":
