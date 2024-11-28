@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import uuid
 from io import BytesIO
 
 import cv2
@@ -18,6 +19,17 @@ load_dotenv()
 AMALIAI_BASE_URL = os.getenv("AMALIAI_BASE_URL")
 AMALIAI_API_KEY = os.getenv("AMALIAI_API_KEY")
 DEFAULT_MODEL_ID = os.getenv("AMALIAI_DEFAULT_MODEL_ID", "")
+
+
+# Initialize session state for conversation track
+if "conversation_id" not in st.session_state:
+    st.session_state.conversation_id = str(uuid.uuid4())
+
+if "conversation_history" not in st.session_state:
+    st.session_state.conversation_history = []
+
+if "parent_message_id" not in st.session_state:
+    st.session_state.parent_message_id = None
 
 
 # Load YOLO model
@@ -49,7 +61,7 @@ def detect_objects(image):
             # Get confidence and bounding box
             conf = float(box.conf[0])
             x1, y1, x2, y2 = map(int, box.xyxy[0])
- 
+
             detected_objects.append(
                 {"class": class_name, "confidence": conf, "bbox": (x1, y1, x2, y2)}
             )
@@ -82,8 +94,19 @@ def visualize_detections(image, detections):
     return img_with_boxes
 
 
-# Function to send request to AmaliAI
-def send_amaliai_request(base_url, api_key, prompt, model_id=None, stream=False):
+def send_amaliai_request(
+    base_url,
+    api_key,
+    prompt,
+    conversation_id,
+    parent_message_id=None,
+    model_id=None,
+    stream=False,
+):
+    """
+    Function to send request to AmaliAI.
+
+    """
     headers = {
         "X-API-KEY": api_key,
         "Content-Type": "application/json",
@@ -91,7 +114,11 @@ def send_amaliai_request(base_url, api_key, prompt, model_id=None, stream=False)
     }
 
     # Construct payload
-    payload = {"prompt": prompt, "stream": stream}
+    payload = {"prompt": prompt, "stream": stream, "conversationId": conversation_id}
+
+    # Add parent message ID if available
+    if parent_message_id:
+        payload["parentMessageId"] = parent_message_id
 
     # Add model_id if provided
     if model_id:
@@ -130,16 +157,50 @@ def send_amaliai_request(base_url, api_key, prompt, model_id=None, stream=False)
         return f"Request failed: {str(e)}"
 
 
+def display_conversation_history():
+    """
+    This Function displays the conversation history in the sidebar
+    """
+    st.sidebar.header("💬 Conversation History")
+
+    # Allow clearing conversation history
+    if st.sidebar.button("🗑️ Clear History"):
+        st.session_state.conversation_history = []
+        st.session_state.conversation_id = str(uuid.uuid4())
+        st.session_state.parent_message_id = None
+
+    # Display conversation history
+    if not st.session_state.conversation_history:
+        st.sidebar.info("No conversation history yet.")
+
+    else:
+        # Reverse the history to show most recent
+        for idx, message in enumerate(reversed(st.session_state.conversation_history)):
+            # Alternate background colors for readability
+            bg_color = "#242323" if idx % 2 == 0 else "#363333"
+
+            # Create container for each message
+            st.sidebar.markdown(
+                f"""
+            <div style='background-color:{bg_color}; padding:10px; margin-bottom:5px; border-radius:5px'>
+            <strong>{"You" if message['role'] == 'user' else "AmaliAI"}:</strong><br>
+            {message['content']}
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+
 # Streamlit App
 def main():
     # Page configuration
     st.set_page_config(
-        page_title="🌽 Agriculture Chatbot",
+        page_title="🍅🍆Agriculture Chatbot",
         page_icon="🌽",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
     )
 
-    st.title("🌽 DevAI Crop Disease Detection and Prevention")
+    st.title("🌽 DevAI Crop Disease Detection and Prevention with AmaliAI")
 
     # Validate environment configuration
     if not AMALIAI_BASE_URL or not AMALIAI_API_KEY:
@@ -147,6 +208,9 @@ def main():
             "❌ Missing AmaliAI configuration. Please set AMALIAI_BASE_URL and AMALIAI_API_KEY in .env file."
         )
         return
+
+    # Display conversation history in sidebar
+    display_conversation_history()
 
     # Optional sidebar for advanced settings (collapsed by default)
     with st.sidebar:
@@ -166,7 +230,7 @@ def main():
         # Display original image with detections
         st.subheader("Image with Detected Objects")
         detected_image = visualize_detections(original_image, detected_objects)
-        st.image(detected_image, channels="BGR")
+        st.image(detected_image, channels="RGB")
 
         # Display detected objects
         st.subheader("Detected Objects")
@@ -183,11 +247,15 @@ def main():
         )
 
         # Prepare context about detected objects
-        objects_context = "\n".join(
-            [
-                f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
-                for obj in detected_objects
-            ]
+        objects_context = (
+            "\n".join(
+                [
+                    f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
+                    for obj in detected_objects
+                ]
+            )
+            if detected_objects
+            else "No Objects detected"
         )
 
         # Process question if provided
@@ -199,27 +267,35 @@ def main():
             img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
             # Construct full prompt
-            full_prompt = f"""Detected objects in the image:
-{objects_context}
-
-Image details are included. {question}"""
+            full_prompt = f"""Detected objects in the image: {objects_context} Question: {question}"""
 
             # Send request to AmaliAI
-            try:
-                response = send_amaliai_request(
-                    base_url=AMALIAI_BASE_URL,
-                    api_key=AMALIAI_API_KEY,
-                    prompt=full_prompt,
-                    model_id=model_id or None,
-                    stream=stream_response,
-                )
+        try:
+            # Add user message to conversation history
+            st.session_state.conversation_history.append(
+                {"role": "user", "content": full_prompt}
+            )
 
-                # Display response
-                st.subheader("AmaliAI's Response")
-                st.write(response)
+            # Send request
+            response = send_amaliai_request(
+                base_url=AMALIAI_BASE_URL,
+                api_key=AMALIAI_API_KEY,
+                prompt=full_prompt,
+                conversation_id=st.session_state.conversation_id,
+                parent_message_id=st.session_state.parent_message_id,
+                model_id=model_id or None,
+                stream=stream_response,
+            )
 
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+            st.session_state.conversation_history.append(
+                {"role": "Assistant", "content": response}
+            )
+
+            st.subheader("AmaliAI's Response")
+            st.write(response)
+
+        except Exception as e:
+            st.error(f"An error occured: {str(e)}")
 
 
 if __name__ == "__main__":
