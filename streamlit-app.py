@@ -77,6 +77,7 @@ if prompt := st.chat_input():
     url =  os.getenv("AI_URI") # Replace with your API endpoint
     headers = {
                "X-Api-Key": x_api_key
+    }
 
     url = os.getenv("AI_URI")  # Replace with your API endpoint
     headers = {
