@@ -190,6 +190,126 @@ def display_conversation_history():
                 unsafe_allow_html=True,
             )
 
+def add_custom_styling():
+    st.markdown("""
+        <style>
+        /* Main background and text colors */
+        .stApp {
+            background-color: #f7f9f4;  /* Light sage background */
+        }
+
+        /* Headers */
+        h1, h2, h3 {
+            color: #2c5530 !important;  /* Dark green */
+        }
+
+        /* Sidebar styling */
+        .css-1d391kg {  /* Sidebar */
+            background-color: #e8eed6 !important;  /* Light olive */
+        }
+
+        /* Buttons */
+        .stButton>button {
+            background-color: #678d58 !important;  /* Forest green */
+            color: white !important;
+            border: none !important;
+            border-radius: 5px !important;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .stButton>button:hover {
+            background-color: #4a6b3d !important;  /* Darker green on hover */
+        }
+
+        /* File uploader */
+        .stFileUploader {
+            background-color: #ffffff !important;
+            border: 2px dashed #678d58 !important;
+            border-radius: 5px !important;
+            padding: 1rem !important;
+        }
+
+        /* Chat messages and conversation styling */
+        .stChatMessage {
+            background-color: #ffffff !important;
+            border-radius: 10px !important;
+            padding: 1rem !important;
+            margin: 0.5rem 0 !important;
+            border-left: 4px solid #678d58 !important;
+        }
+
+        /* Chat message text */
+        .stChatMessage p {
+            color: #2c5530 !important;  /* Dark green text */
+            font-weight: 400 !important;
+            opacity: 1 !important;
+        }
+
+        /* Message from user */
+        .stChatMessageContent--user {
+            background-color: #e8eed6 !important;  /* Light olive */
+        }
+
+        /* Message from assistant */
+        .stChatMessageContent--assistant {
+            background-color: #ffffff !important;
+        }
+
+        /* Text input fields */
+        .stTextInput>div>div>input {
+            background-color: #ffffff !important;
+            border: 1px solid #678d58 !important;
+            border-radius: 5px !important;
+            color: #2c5530 !important;  /* Dark green text */
+            font-weight: 500 !important;  /* Medium weight for better visibility */
+            caret-color: #678d58 !important;  /* Cursor color */
+        }
+
+        /* Text input placeholder */
+        .stTextInput>div>div>input::placeholder {
+            color: #678d58 !important;  /* Forest green for placeholder */
+            opacity: 0.7 !important;
+        }
+
+        /* Blinking cursor */
+        .stTextInput>div>div>input:focus {
+            caret-color: #2c5530 !important;  /* Dark green cursor */
+            border-color: #2c5530 !important;  /* Dark green border on focus */
+        }
+
+        /* Dataframe styling */
+        .dataframe {
+            background-color: #ffffff !important;
+            border: 1px solid #678d58 !important;
+            border-radius: 5px !important;
+        }
+
+        /* Custom container for detected objects */
+        .detected-objects {
+            background-color: #ffffff !important;
+            border: 1px solid #678d58 !important;
+            border-radius: 5px !important;
+            padding: 1rem !important;
+            margin: 1rem 0 !important;
+        }
+
+        /* Progress bar */
+        .stProgress > div > div > div > div {
+            background-color: #678d58 !important;
+        }
+
+        /* Conversation text in the main chat area */
+        .stMarkdown {
+            color: #2c5530 !important;
+            opacity: 1 !important;
+        }
+
+        /* Ensure all text in chat is visible */
+        p, span, div {
+            color: #2c5530 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 # def add_to_conversation_history(role, content):
 #     """
@@ -210,6 +330,9 @@ def main():
         page_icon="🌽",
         initial_sidebar_state="expanded",
     )
+
+    # Add the custom styling
+    add_custom_styling()
 
     st.title("🌽 DevAI Crop Disease Detection and Prevention with AmaliAI")
 
@@ -312,9 +435,14 @@ def main():
                 )
 
                 # Addd assistant response to conversation History
+                # st.session_state.conversation_history.append(
+                #     {"role": "assistant", "content": response}
+                # )
+
                 st.session_state.conversation_history.append(
                     {"role": "assistant", "content": response}
                 )
+
 
                 # Update parent message ID for context tracking
                 st.session_state.parent_message_id = str(uuid.uuid4())
@@ -322,7 +450,7 @@ def main():
                 # add_to_conversation_history("assistant", response)
                 #
                 # st.subheader("AmaliAI's Response")
-                st.write(response)
+                # st.write(response)
 
             except Exception as e:
                 st.error(f"An error occured: {str(e)}")
