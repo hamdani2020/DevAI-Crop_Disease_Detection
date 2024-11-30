@@ -38,7 +38,7 @@ def load_yolo_model():
 
 
 # Perform object detection
-def detect_objects(image):
+def detect_objects(image, confidence_threshold=0.5):
     model = load_yolo_model()
 
     # Convert Streamlit uploaded file to OpenCV format
@@ -94,12 +94,10 @@ def visualize_detections(image, detections):
 
 
 def send_amaliai_request(
-    base_url,
     api_key,
     prompt,
-    conversation_id=None,
+    image_base64=None,
     model_name="gemini-1.5-flash-latest",
-    model_id=None,
     stream=False,
 ):
     """
@@ -113,7 +111,19 @@ def send_amaliai_request(
     }
 
     # Construct payload
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    payload = {"contents": []}
+
+    # Add text prompt
+    if image_base64:
+        image_part = {
+            "parts": [
+                {"text": prompt},
+                {"inlineData": {"mimeType": "image/png", "data": image_base64}},
+            ]
+        }
+        payload["contents"].append(image_part)
+    else:
+        payload["content"].append({"parts": [{"text": prompt}]})
 
     try:
         url = f"{base_url}?key={api_key}"
@@ -200,8 +210,16 @@ def main():
     # Optional sidebar for advanced settings (collapsed by default)
     with st.sidebar:
         st.header("⚙️ Advanced Settings")
-        model_id = st.text_input("")
         stream_response = st.checkbox("Stream Response", value=False)
+
+        confidence_threshold = st.slider(
+            "Confidence Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            step=0.05,
+            help="Set minimum confidence level for object detection. Higher values show only more certain detections",
+        )
 
         # Display chat conversation on the main page
         # st.header(" Chat with AmaliAI")
@@ -228,33 +246,44 @@ def main():
 
         # Display detected objects
         st.subheader("Detected Objects")
-        objects_df = [
-            {"Class": obj["class"], "Confidence": f"{obj['confidence']:.2%}"}
-            for obj in detected_objects
-        ]
-        st.dataframe(objects_df)
+        if detected_objects:
+            objects_df = [
+                {"Class": obj["class"], "Confidence": f"{obj['confidence']:.2%}"}
+                for obj in detected_objects
+            ]
+            st.dataframe(objects_df)
+        else:
+            st.info(
+                f"No objects detected abot the {confidence_threshold:.2%} confidence threshold"
+            )
+        # objects_df = [
+        #     {"Class": obj["class"], "Confidence": f"{obj['confidence']:.2%}"}
+        #     for obj in detected_objects
+        # ]
+        # st.dataframe(objects_df)
 
         # Question input for the image
         st.markdown("### Chat with AMALIAI")
         question = st.text_input(
             "### Chat with AmaliAI",
             placeholder="What objects are in this image?",
+            disabled=not detected_objects,
         )
 
         if question or st.session_state.conversation_history:
             st.write("---")
 
         # Prepare context about detected objects
-        # objects_context = (
-        #     "\n".join(
-        #         [
-        #             f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
-        #             for obj in detected_objects
-        #         ]
-        #     )
-        #     if detected_objects
-        #     else "No Objects detected"
-        # )
+        objects_context = (
+            "\n".join(
+                [
+                    f"- {obj['class']} (confidence: {obj['confidence']:.2%})"
+                    for obj in detected_objects
+                ]
+            )
+            if detected_objects
+            else "No Objects detected"
+        )
 
         # Process question if provided
         if uploaded_file and question:
@@ -265,7 +294,7 @@ def main():
             img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
             # Construct full prompt
-            full_prompt = f"""Question: {question}"""
+            full_prompt = f"""I have uploaded an image eith the following detected objects: {objects_context} Question: {question}"""
 
             # Send request to AmaliAI
             try:
@@ -274,12 +303,9 @@ def main():
                 )
 
                 response = send_amaliai_request(
-                    base_url=base_url,
                     api_key=GEMINI_API_KEY,
                     prompt=full_prompt,
-                    conversation_id=st.session_state.conversation_id,
-                    parent_message_id=st.session_state.parent_message_id,
-                    model_id=model_id or None,
+                    image_base64=img_base64,
                     stream=stream_response,
                 )
 
