@@ -161,20 +161,29 @@ def display_conversation_history():
 
     else:
         # Reverse the history to show most recent
-        for idx, message in enumerate(reversed(st.session_state.conversation_history)):
-            # Alternate background colors for readability
-            bg_color = "#242323" if idx % 2 == 0 else "#363333"
+        num_summary_messages = 3
+        summary_messages = st.session_state.conversation_history[-num_summary_messages:]
 
-            # Create container for each message
+        for idx, message in enumerate(summary_messages, 1):
+            content = (
+                message["content"][:100] + "..."
+                if len(message["content"]) > 100
+                else message["content"]
+            )
+
             st.sidebar.markdown(
                 f"""
-            <div style='background-color:{bg_color}; padding:10px; margin-bottom:5px; border-radius:5px'>
-            <strong>{"You" if message['role'] == 'user' else "AmaliAI"}:</strong><br>
-            {message['content']}
-            </div>
-            """,
+                <div style='background-color:#1a4203; padding:8px; margin-bottom:3px; border-radius:5px'>
+                <strong>{"You" if message['role'] == 'user' else "AmaliAI"}:</strong><br>
+                {content}
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
+
+        # Add a total message count
+        total_messages = len(st.session_state.conversation_history)
+        st.sidebar.markdown(f"**Total Messages:** {total_messages}")
 
 
 # def add_to_conversation_history(role, content):
@@ -192,12 +201,13 @@ def display_conversation_history():
 def main():
     # Page configuration
     st.set_page_config(
-        page_title="🍅🍆Agriculture Chatbot",
+        page_title="🍅🍆GreenAI",
         page_icon="🌽",
         initial_sidebar_state="expanded",
     )
 
-    st.title("🌽 DevAI Crop Disease Detection and Prevention with AmaliAI")
+    st.title("🌽 GreenAI")
+    st.markdown("🌽 DevAI Crop Disease Detection and Prevention with AmaliAI")
 
     # Validate environment configuration
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -233,7 +243,7 @@ def main():
         #             st.chat_message("assistant").markdown(message["content"])
 
     # File uploader for images
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader("AgroDetect", type=["jpg", "jpeg", "png"])
 
     if uploaded_file is not None:
         # Perform object detection
@@ -263,15 +273,20 @@ def main():
         # st.dataframe(objects_df)
 
         # Question input for the image
-        st.markdown("### Chat with AMALIAI")
-        question = st.text_input(
-            "### Chat with AmaliAI",
+        st.markdown("### Chat with GreenAI")
+
+        conversation_container = st.container()
+
+        question = st.chat_input(
             placeholder="What objects are in this image?",
-            disabled=not detected_objects,
         )
 
-        if question or st.session_state.conversation_history:
-            st.write("---")
+        with conversation_container:
+            for message in st.session_state.conversation_history:
+                if message["role"] == "user":
+                    st.chat_message("user").markdown(message["content"])
+                else:
+                    st.chat_message("assistant").markdown(message["content"])
 
         # Prepare context about detected objects
         objects_context = (
@@ -315,21 +330,23 @@ def main():
                 )
 
                 # Update parent message ID for context tracking
-                st.session_state.parent_message_id = str(uuid.uuid4())
+                # st.session_state.parent_message_id = str(uuid.uuid4())
 
                 # add_to_conversation_history("assistant", response)
                 #
                 # st.subheader("AmaliAI's Response")
-                st.write(response)
+                # st.write(response)
+
+                st.rerun()
 
             except Exception as e:
                 st.error(f"An error occured: {str(e)}")
 
-        for message in st.session_state.conversation_history:
-            if message["role"] == "user":
-                st.chat_message("user").markdown(message["content"])
-            else:
-                st.chat_message("assistant").markdown(message["content"])
+        # for message in st.session_state.conversation_history:
+        #     if message["role"] == "user":
+        #         st.chat_message("user").markdown(message["content"])
+        #     else:
+        #         st.chat_message("assistant").markdown(message["content"])
 
 
 if __name__ == "__main__":
