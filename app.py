@@ -26,7 +26,7 @@ if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = str(uuid.uuid4())
 
 if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = []
+    st.session_state.conversation_history = ""
 
 if "parent_message_id" not in st.session_state:
     st.session_state.parent_message_id = None
@@ -165,28 +165,25 @@ def display_conversation_history():
 
     # Allow clearing conversation history
     if st.sidebar.button("🗑️ Clear History"):
-        st.session_state.conversation_history = []
+        st.session_state.conversation_history = ""
         st.session_state.conversation_id = str(uuid.uuid4())
         st.session_state.parent_message_id = None
 
     # Display conversation history
     if not st.session_state.conversation_history:
         st.sidebar.info("No conversation history yet.")
-
     else:
-        # Reverse the history to show most recent
-        for idx, message in enumerate(reversed(st.session_state.conversation_history)):
-            # Alternate background colors for readability
+        messages = st.session_state.conversation_history.split("|")
+        for idx, message in enumerate(reversed(messages)):
+            role, content = message.split(":", 1)
             bg_color = "#242323" if idx % 2 == 0 else "#363333"
-
-            # Create container for each message
             st.sidebar.markdown(
                 f"""
-            <div style='background-color:{bg_color}; padding:10px; margin-bottom:5px; border-radius:5px'>
-            <strong>{"You" if message['role'] == 'user' else "AmaliAI"}:</strong><br>
-            {message['content']}
-            </div>
-            """,
+                <div style='background-color:{bg_color}; padding:10px; margin-bottom:5px; border-radius:5px'>
+                <strong>{"You" if role == 'user' else "AmaliAI"}:</strong><br>
+                {content}
+                </div>
+                """,
                 unsafe_allow_html=True,
             )
 
@@ -420,14 +417,20 @@ def main():
 
             # Send request to AmaliAI
             try:
-                st.session_state.conversation_history.append(
-                    {"role": "user", "content": question}
-                )
+                # Append the question to conversation history
+                if st.session_state.conversation_history:
+                    st.session_state.conversation_history += f"|user:{question}"
+                else:
+                    st.session_state.conversation_history = f"user:{question}"
+
+                # includes all user and ai convo
+                full_convo = st.session_state.conversation_history
+                print("full convo: ", full_convo)
 
                 response = send_amaliai_request(
                     base_url=AMALIAI_BASE_URL,
                     api_key=AMALIAI_API_KEY,
-                    prompt=full_prompt,
+                    prompt=full_convo,
                     conversation_id=st.session_state.conversation_id,
                     parent_message_id=st.session_state.parent_message_id,
                     model_id=model_id or None,
@@ -439,10 +442,9 @@ def main():
                 #     {"role": "assistant", "content": response}
                 # )
 
-                st.session_state.conversation_history.append(
-                    {"role": "assistant", "content": response}
-                )
-
+                # Append the response to conversation history
+                st.session_state.conversation_history += f"|assistant:{response}"
+            
 
                 # Update parent message ID for context tracking
                 st.session_state.parent_message_id = str(uuid.uuid4())
@@ -455,11 +457,15 @@ def main():
             except Exception as e:
                 st.error(f"An error occured: {str(e)}")
 
-        for message in st.session_state.conversation_history:
-            if message["role"] == "user":
-                st.chat_message("user").markdown(message["content"])
+        # Display the conversation history on the main page
+        for message in st.session_state.conversation_history.split("|"):
+            if ":" not in message:
+                continue  # Skip invalid messages
+            role, content = message.split(":", 1)
+            if role == "user":
+                st.chat_message("user").markdown(content)
             else:
-                st.chat_message("assistant").markdown(message["content"])
+                st.chat_message("assistant").markdown(content)
 
 
 if __name__ == "__main__":
