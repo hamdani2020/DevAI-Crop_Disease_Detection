@@ -206,8 +206,11 @@ def main():
         initial_sidebar_state="expanded",
     )
 
-    st.title("🌽 GreenAI")
-    st.markdown("🌽 DevAI Crop Disease Detection and Prevention with AmaliAI")
+    st.markdown("<h1 style='color: green;'>🌽 GreenAI🍀</h1>", unsafe_allow_html=True)
+    st.markdown(
+        "<h4 style='color: green;'>DevAI Crop Disease Detection and Prevention</h4>",
+        unsafe_allow_html=True,
+    )
 
     # Validate environment configuration
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
