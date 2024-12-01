@@ -14,6 +14,8 @@ from ultralytics import YOLO
 # Load environment variables
 load_dotenv()
 
+APP_VERSION = "0.0.1"
+
 # Retrieve API configuration from environment variables
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # AMALIAI_API_KEY = os.getenv("AMALIAI_API_KEY")
@@ -247,6 +249,10 @@ def main():
 
     # File uploader for images
     uploaded_file = st.file_uploader("AgroDetect", type=["jpg", "jpeg", "png"])
+    st.markdown("---")
+    st.markdown(
+        "*Developed with 💚 for Agricultural Innovation and Happy Farmer's Day Celebration*"
+    )
 
     if uploaded_file is not None:
         # Perform object detection
