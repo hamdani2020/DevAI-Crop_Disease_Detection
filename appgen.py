@@ -176,7 +176,7 @@ def display_conversation_history():
             st.sidebar.markdown(
                 f"""
                 <div style='background-color:#1a4203; padding:8px; margin-bottom:3px; border-radius:5px'>
-                <strong>{"You" if message['role'] == 'user' else "AmaliAI"}:</strong><br>
+                <strong>{"You" if message['role'] == 'user' else "GreenAI"}:</strong><br>
                 {content}
                 </div>
                 """,
