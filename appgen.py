@@ -11,10 +11,19 @@ from dotenv import load_dotenv
 from PIL import Image
 from ultralytics import YOLO
 
+from auth import login_flow
+
+# Import login flow
+from database import create_tables
+
 # Load environment variables
 load_dotenv()
 
+# create create_tables
+create_tables()
+
 APP_VERSION = "0.0.1"
+
 
 # Retrieve API configuration from environment variables
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -213,6 +222,19 @@ def main():
         "<h4 style='color: green;'>DevAI Crop Disease Detection and Prevention</h4>",
         unsafe_allow_html=True,
     )
+
+    # User Authentication
+    user = login_flow()
+
+    if not user:
+        st.warning("Please log in to access the application")
+        return
+
+    # Display user info in sidebar
+    with st.sidebar:
+        st.image(user.picture_url, width=100, caption=user.name)
+        st.write(f"Email: {user.email}")
+        st.write(f"Last Login: {user.last_login.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Validate environment configuration
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
