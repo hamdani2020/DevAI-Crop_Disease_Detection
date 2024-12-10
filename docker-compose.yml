@@ -1,0 +1,22 @@
+services:
+  greenai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+      - ./model.pt:/app/model.pt # Mount YOLO model file
+    restart: unless-stopped
+
+  # Optional: Add a volume for persistent data if needed
+  data:
+    image: busybox
+    volumes:
+      - greenai_data:/data
+
+volumes:
+  greenai_data:

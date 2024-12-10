@@ -251,9 +251,7 @@ def main():
     # File uploader for images
     uploaded_file = st.file_uploader("AgroDetect", type=["jpg", "jpeg", "png"])
     st.markdown("---")
-    st.markdown(
-        "*Developed with 💚 for Agricultural Innovation and Happy Farmer's Day Celebration*"
-    )
+    st.markdown("*Developed with 💚 for Agricultural Innovation*")
 
     if uploaded_file is not None:
         # Perform object detection

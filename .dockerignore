@@ -1,0 +1,38 @@
+# Version Control
+.git
+.gitignore
+
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+
+# Local development files
+.DS_Store
+Thumbs.db
+
+# Docker specific
+Dockerfile
+docker-compose.yml
+.dockerignore
