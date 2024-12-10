@@ -36,7 +36,7 @@ if "parent_message_id" not in st.session_state:
 # Load YOLO model
 @st.cache_resource
 def load_yolo_model():
-    return YOLO("model.pt")  # You can change to a different pre-trained model if needed
+    return YOLO("model.pt")
 
 
 # Perform object detection
