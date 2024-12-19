@@ -1,101 +1,76 @@
 version: 2.1
 
-orbs:
-  docker: circleci/docker@2.4.0
-  python: circleci/python@2.1.1
-
 executors:
-  python-docker:
+  python-executor:
     docker:
-      - image: cimg/python:3.9
+      - image: circleci/python:3.8
+    working_directory: ~/repo
 
 jobs:
-  lint-and-test:
-    executor: python-docker
+  # Install dependencies and environment setup
+  setup:
+    executor: python-executor
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
-          packages:
-            - flake8
-            - pytest
-            - black
       - run:
-          name: Run linting
+          name: Install dependencies
           command: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+      - run:
+          name: Set up environment
+          command: |
+            echo "GEMINI_API_KEY=${GEMINI_API_KEY}" > .env
+
+  # Code Linting
+  lint:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Run linter
+          command: |
+            pip install flake8
             flake8 .
-            black . --check
+
+  # Run tests
+  test:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
       - run:
           name: Run tests
           command: |
-            pytest tests/
+            pip install pytest
+            pytest
 
-  build-and-push:
-    executor: python-docker
+  # Deployment
+  deploy:
+    executor: python-executor
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - docker/build:
-          image: $DOCKER_IMAGE
-          tag: $CIRCLE_SHA1
-      - docker/push:
-          image: $DOCKER_IMAGE
-          tag: $CIRCLE_SHA1
-      - when:
-          condition:
-            equal: [main, << pipeline.git.branch >>]
-          steps:
-            - docker/push:
-                image: $DOCKER_IMAGE
-                tag: latest
-
-  deploy-staging:
-    executor: python-docker
-    steps:
-      - checkout
-      - setup_remote_docker
       - run:
-          name: Deploy to staging
+          name: Deploy to server
           command: |
-            echo "Deploy to staging environment"
-            # Add deployment scripts here
-
-  deploy-production:
-    executor: python-docker
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Deploy to production
-          command: |
-            echo "Deploy to production environment"
-            # Add deployment scripts here
+            echo "Deploying application..."
+            # Add your deployment commands here, e.g., SSH into a server and pull updates.
 
 workflows:
   version: 2
-  build-test-deploy:
+  build-and-deploy:
     jobs:
-      - lint-and-test
-      - build-and-push:
+      - setup
+      - lint:
           requires:
-            - lint-and-test
-          context:
-            - docker-hub-creds
-          filters:
-            branches:
-              only:
-                - main
-                - develop
-      - deploy-staging:
+            - setup
+      - test:
           requires:
-            - build-and-push
-          filters:
-            branches:
-              only: develop
-      - deploy-production:
+            - setup
+      - deploy:
           requires:
-            - build-and-push
-          filters:
-            branches:
-              only: main
+            - test
