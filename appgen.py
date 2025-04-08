@@ -95,12 +95,12 @@ def visualize_detections(image, detections):
     return img_with_boxes
 
 
-def send_amaliai_request(
+def send_gemini_request(
     api_key,
     prompt,
     image_base64=None,
-    model_name="gemini-1.5-flash-latest",
-    stream=False,
+    model_name="gemini-2.0-flash",
+    stream=True,
 ):
     """
     Function to send request to AmaliAI.
@@ -325,7 +325,7 @@ def main():
                     {"role": "user", "content": question}
                 )
 
-                response = send_amaliai_request(
+                response = send_gemini_request(
                     api_key=GEMINI_API_KEY,
                     prompt=full_prompt,
                     image_base64=img_base64,
