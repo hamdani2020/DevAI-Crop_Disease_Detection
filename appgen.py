@@ -36,7 +36,7 @@ if "parent_message_id" not in st.session_state:
 # Load YOLO model
 @st.cache_resource
 def load_yolo_model():
-    return YOLO("model.pt")
+    return YOLO("model.pt")  # You can change to a different pre-trained model if needed
 
 
 # Perform object detection
@@ -205,7 +205,6 @@ def main():
     st.set_page_config(
         page_title="🍅🍆GreenAI",
         page_icon="🌽",
-        layout="wide",
         initial_sidebar_state="expanded",
     )
 
@@ -251,7 +250,9 @@ def main():
     # File uploader for images
     uploaded_file = st.file_uploader("AgroDetect", type=["jpg", "jpeg", "png"])
     st.markdown("---")
-    st.markdown("*Developed with 💚 for Agricultural Innovation*")
+    st.markdown(
+        "*Developed with 💚 for Agricultural Innovation and Happy Farmer's Day Celebration*"
+    )
 
     if uploaded_file is not None:
         # Perform object detection
@@ -359,3 +360,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
