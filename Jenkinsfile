@@ -1,5 +1,5 @@
 pipeline {
-    agent none  // No global agent, each stage will define its own
+    agent none
     environment {
         DOCKER_CONFIG = '/tmp/.docker'  // Set to a directory with write access
         repoUri = "875986301930.dkr.ecr.eu-west-1.amazonaws.com/greenai"
