@@ -7,7 +7,7 @@ pipeline {
         registryCreds = 'ecr:eu-west-1:awscreds'
         cluster = "GreenCluster"
         service = "green-svc"
-        region = 'eu-west-1'
+        region = 'eu-west-2'
     }
     stages {
         stage('Docker Test') {
