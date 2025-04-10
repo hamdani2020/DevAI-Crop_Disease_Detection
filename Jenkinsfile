@@ -23,7 +23,9 @@ pipeline {
                 }
             }
         }
-        /* stage('Build Docker Image') {
+
+        /*
+        stage('Build Docker Image') {
             agent {
                 docker {
                     image 'docker:latest'
@@ -38,6 +40,7 @@ pipeline {
                 }
             }
         }
+
         stage('Push Docker Image to ECR') {
             agent {
                 docker {
@@ -55,11 +58,12 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to ECS') {
             agent {
                 docker {
                     image 'amazon/aws-cli:latest'  // Use a pre-built AWS CLI Docker image for ECS deployment
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=""'  // Optional if needed by AWS CLI
+                    args '-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=""'
                 }
             }
             steps {
@@ -70,6 +74,7 @@ pipeline {
                     }
                 }
             }
-        }*/
+        }
+        */
     }
 }
