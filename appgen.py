@@ -36,7 +36,7 @@ if "parent_message_id" not in st.session_state:
 # Load YOLO model
 @st.cache_resource
 def load_yolo_model():
-    return YOLO("model.pt")  # You can change to a different pre-trained model if needed
+    return YOLO("last.pt")  # You can change to a different pre-trained model if needed
 
 
 # Perform object detection
@@ -103,7 +103,7 @@ def send_gemini_request(
     stream=True,
 ):
     """
-    Function to send request to AmaliAI.
+    Function to send request to GreenAI.
 
     """
 
@@ -210,7 +210,7 @@ def main():
 
     st.markdown("<h1 style='color: green;'>🌽 GreenAI🍀</h1>", unsafe_allow_html=True)
     st.markdown(
-        "<h4 style='color: green;'>DevAI Crop Disease Detection and Prevention</h4>",
+        "<h4 style='color: green;'>Disease Detection</h4>",
         unsafe_allow_html=True,
     )
 
@@ -251,7 +251,7 @@ def main():
     uploaded_file = st.file_uploader("AgroDetect", type=["jpg", "jpeg", "png"])
     st.markdown("---")
     st.markdown(
-        "*Developed with 💚 for Agricultural Innovation and Happy Farmer's Day Celebration*"
+        "*Developed with 💚 for Agricultural Innovation*"
     )
 
     if uploaded_file is not None:
@@ -360,4 +360,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

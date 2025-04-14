@@ -22,6 +22,17 @@ pipeline {
                     sh 'docker ps'
                 }
             }
+            post {
+                success {
+                    echo 'Docker Test stage completed successfully.'
+                }
+                failure {
+                    echo 'Docker Test stage failed.'
+                }
+                always {
+                    echo 'Docker Test stage has finished.'
+                }
+            }
         }
 
         /*
@@ -37,6 +48,17 @@ pipeline {
                     echo 'Building Docker Image from Dockerfile...'
                     sh 'mkdir -p /tmp/.docker'  // Ensure the directory exists
                     dockerImage = docker.build(repoUri + ":$BUILD_NUMBER")
+                }
+            }
+            post {
+                success {
+                    echo 'Docker image built successfully.'
+                }
+                failure {
+                    echo 'Failed to build Docker image.'
+                }
+                always {
+                    echo 'Build Docker Image stage has finished.'
                 }
             }
         }
@@ -57,6 +79,17 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    echo 'Docker image pushed to ECR successfully.'
+                }
+                failure {
+                    echo 'Failed to push Docker image to ECR.'
+                }
+                always {
+                    echo 'Push Docker Image to ECR stage has finished.'
+                }
+            }
         }
 
         stage('Deploy to ECS') {
@@ -72,6 +105,17 @@ pipeline {
                     withAWS(credentials: 'awscreds', region: "${region}") {
                         sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
                     }
+                }
+            }
+            post {
+                success {
+                    echo 'Deployment to ECS succeeded.'
+                }
+                failure {
+                    echo 'Deployment to ECS failed.'
+                }
+                always {
+                    echo 'Deploy to ECS stage has finished.'
                 }
             }
         }
