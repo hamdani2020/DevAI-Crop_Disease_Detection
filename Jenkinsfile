@@ -58,7 +58,7 @@ pipeline {
                     echo 'Failed to build Docker image.'
                 }
                 always {
-                    echo 'Build Docker Image stage has finished.'
+                    echo 'The Build Docker Image stage has finished.'
                 }
             }
         }
